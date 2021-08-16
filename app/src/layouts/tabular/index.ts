@@ -17,21 +17,8 @@ import adjustFieldsForDisplays from '@/utils/adjust-fields-for-displays';
 import hideDragImage from '@/utils/hide-drag-image';
 import useShortcut from '@/composables/use-shortcut';
 import { getDefaultDisplayForType } from '@/utils/get-default-display-for-type';
-
-type LayoutOptions = {
-	widths?: {
-		[field: string]: number;
-	};
-	limit?: number;
-	spacing?: 'comfortable' | 'cozy' | 'compact';
-};
-
-type LayoutQuery = {
-	fields?: string[];
-	sort?: string;
-	page?: number;
-	limit?: number;
-};
+import useSync from '@/composables/use-sync';
+import { LayoutOptions, LayoutQuery } from './types';
 
 export default defineLayout<LayoutOptions, LayoutQuery>({
 	id: 'tabular',
@@ -43,7 +30,7 @@ export default defineLayout<LayoutOptions, LayoutQuery>({
 		sidebar: TabularSidebar,
 		actions: TabularActions,
 	},
-	setup(props) {
+	setup(props, { emit }) {
 		const { t, n } = useI18n();
 
 		const router = useRouter();
@@ -51,7 +38,13 @@ export default defineLayout<LayoutOptions, LayoutQuery>({
 		const table = ref<ComponentPublicInstance>();
 		const mainElement = inject('main-element', ref<Element | null>(null));
 
-		const { collection, searchQuery, selection, layoutOptions, layoutQuery, filters } = toRefs(props);
+		const selection = useSync(props, 'selection', emit);
+		const layoutOptions = useSync(props, 'layoutOptions', emit);
+		const layoutQuery = useSync(props, 'layoutQuery', emit);
+		const filters = useSync(props, 'filters', emit);
+		const searchQuery = useSync(props, 'searchQuery', emit);
+
+		const { collection } = toRefs(props);
 
 		const { info, primaryKeyField, fields: fieldsInCollection, sortField } = useCollection(collection);
 
